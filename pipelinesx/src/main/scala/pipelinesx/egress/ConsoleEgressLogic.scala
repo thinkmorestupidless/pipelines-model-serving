@@ -1,8 +1,9 @@
 package pipelinesx.egress
 
-import pipelines.streamlets._
-import pipelines.akkastream._
 import java.io.PrintStream
+
+import pipelines.akkastream._
+import pipelines.streamlets._
 
 /**
  * Abstraction for writing to output to the console (i.e., stdout).
@@ -15,7 +16,7 @@ final case class ConsoleEgressLogic[IN](
     prefix: String,
     out:    PrintStream    = Console.out)(
     implicit
-    context: StreamletContext) extends FlowEgressLogic[IN](in) {
+    context: AkkaStreamletContext) extends FlowEgressLogic[IN](in) {
 
   def write(record: IN): Unit =
     out.println(prefix + record.toString)

@@ -65,6 +65,23 @@ lazy val airlineFlightsModelServingPipeline = (project in file("./airline-flight
   .settings(commonSettings)
   .dependsOn(pipelinesx, modelServing)
 
+// Each app project must include the avroSpecificSourceDirectories setting shown
+// below. See the README for details.
+lazy val fraudDetection = (project in file("./fraud-detection"))
+  .enablePlugins(PipelinesApplicationPlugin)
+  .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
+  .settings(
+    name := s"fraud-detection-$user",
+    version := thisVersion,
+    runLocalConfigFile := Some("fraud-detection/src/main/resources/local.conf"),
+    pipelinesDockerRegistry := Some("docker-registry-default.fiorano.lightbend.com"),
+    libraryDependencies ++= Seq(akkaSprayJson, influx, scalaTest),
+    avroSpecificSourceDirectories in Compile ++=
+      Seq(new java.io.File("model-serving/src/main/avro"))
+  )
+  .settings(commonSettings)
+  .dependsOn(pipelinesx, modelServing)
+
 lazy val pipelinesx = (project in file("./pipelinesx"))
   .enablePlugins(PipelinesLibraryPlugin)
   .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
@@ -95,7 +112,7 @@ lazy val commonScalacOptions = Seq(
   )
 
 lazy val scalacTestCompileOptions = commonScalacOptions ++ Seq(
-  "-Xfatal-warnings",
+  //"-Xfatal-warnings",
   "-Ywarn-dead-code",                  // Warn when dead code is identified.
   "-Ywarn-extra-implicit",             // Warn when more than one implicit parameter section is defined.
   "-Ywarn-numeric-widen",              // Warn when numerics are widened.

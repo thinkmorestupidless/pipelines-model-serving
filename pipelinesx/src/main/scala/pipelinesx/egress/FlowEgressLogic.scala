@@ -1,9 +1,9 @@
 package pipelinesx.egress
 
-import pipelines.streamlets._
+import akka.stream.scaladsl.Sink
 import pipelines.akkastream._
 import pipelines.akkastream.scaladsl._
-import akka.stream.scaladsl.Sink
+import pipelines.streamlets._
 
 /**
  * An abstraction for the logic in an "Egress" that has a single inlet and then
@@ -15,7 +15,7 @@ import akka.stream.scaladsl.Sink
 abstract class FlowEgressLogic[IN](
     val inlet: CodecInlet[IN])(
     implicit
-    context: StreamletContext)
+    context: AkkaStreamletContext)
   extends RunnableGraphStreamletLogic {
   /**
    * Logic to process the data, such as writing to a database.
