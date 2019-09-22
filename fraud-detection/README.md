@@ -26,7 +26,7 @@ https://fraud-detection-demo.s3-eu-west-1.amazonaws.com/creditcard.csv.zip
 - Unzip it
 - Place a copy in 
   - `./fraud-detection/notebooks/data` and 
-  - `./fraud-detection/src/main/resources/data`
+  - `./fraud-detection/pipelines/src/main/resources/data`
   
 ### Training/Exporting the Models
 
@@ -52,7 +52,7 @@ Run SBT and select the `fraudDetection` project, then `runLocal` will compile an
 
 ```shell script
 sbt
-project fraudDetection
+project fraudDetectionPipeline
 runLocal
 ```
 

@@ -67,13 +67,13 @@ lazy val airlineFlightsModelServingPipeline = (project in file("./airline-flight
 
 // Each app project must include the avroSpecificSourceDirectories setting shown
 // below. See the README for details.
-lazy val fraudDetection = (project in file("./fraud-detection"))
+lazy val fraudDetectionPipeline = (project in file("./fraud-detection/pipelines"))
   .enablePlugins(PipelinesApplicationPlugin)
   .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
   .settings(
     name := s"fraud-detection-$user",
     version := thisVersion,
-    runLocalConfigFile := Some("fraud-detection/src/main/resources/local.conf"),
+    runLocalConfigFile := Some("fraud-detection/pipelines/src/main/resources/local.conf"),
     pipelinesDockerRegistry := Some("docker-registry-default.fiorano.lightbend.com"),
     libraryDependencies ++= Seq(akkaSprayJson, influx, scalaTest),
     avroSpecificSourceDirectories in Compile ++=
@@ -81,6 +81,27 @@ lazy val fraudDetection = (project in file("./fraud-detection"))
   )
   .settings(commonSettings)
   .dependsOn(pipelinesx, modelServing)
+
+lazy val fraudDetectionCustomerServiceApi = (project in file("./fraud-detection/lagom/fraud-api"))
+  .settings(
+    libraryDependencies ++= Seq(
+      lagomScaladslApi
+    )
+  )
+
+lazy val fraudDetectionCustomerServiceImpl = (project in file("./fraud-detection/lagom/fraud-impl"))
+  .enablePlugins(LagomScala)
+  .settings(
+    libraryDependencies ++= Seq(
+      lagomScaladslPersistenceCassandra,
+      lagomScaladslKafkaBroker,
+      lagomScaladslTestKit,
+      "com.softwaremill.macwire" %% "macros" % "2.3.0" % "provided",
+      "org.scalatest" %% "scalatest" % "3.0.4" % Test
+    )
+  )
+  .settings(lagomForkedTestSettings)
+  .dependsOn(fraudDetectionCustomerServiceApi)
 
 lazy val pipelinesx = (project in file("./pipelinesx"))
   .enablePlugins(PipelinesLibraryPlugin)
