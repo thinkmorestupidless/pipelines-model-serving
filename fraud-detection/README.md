@@ -1,6 +1,6 @@
 # Fraud Detection 
 
-> Note: This is a demo application - see the Story section below for how to deliver it.
+> Note: This is a demo application - see the [Story](DEMO_STORY.md) page for how to deliver it.
 
 ## Getting Started
 
@@ -73,4 +73,3 @@ curl -X POST -H "Content-Type: application/json" -d @testing/fraud.json http://l
 ```shell script
 curl -X POST -H "Content-Type: application/json" -d @testing/normal.json http://localhost:3004
 ```
-
