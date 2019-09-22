@@ -103,6 +103,15 @@ lazy val fraudDetectionCustomerServiceImpl = (project in file("./fraud-detection
   .settings(lagomForkedTestSettings)
   .dependsOn(fraudDetectionCustomerServiceApi)
 
+lazy val fraudDetectionCustomerGenerator = (project in file("./fraud-detection/customer-generator"))
+  .settings(
+    mainClass := Some("com.lightbend.fraud.gen.Main"),
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-stream" % "2.5.25",
+      "org.slf4j" % "slf4j-simple" % "1.7.28"
+    )
+  )
+
 lazy val pipelinesx = (project in file("./pipelinesx"))
   .enablePlugins(PipelinesLibraryPlugin)
   .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
