@@ -1,0 +1,7 @@
+notebooks/data/*
+notebooks/output/*
+notebooks/.fraud
+
+src/main/resources/data/*
+
+!**/.gitkeep
