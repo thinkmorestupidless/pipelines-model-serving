@@ -2,6 +2,8 @@
 
 > Note: This is a demo application - see the [Story](docs/STORY.md) page for how to deliver it.
 
+> Note: This is a work-in-progress - see the [Tasks](TASKS.md) file for what needs doing.
+
 ## Getting Started
 
 A couple of things before you `buildAndPublish`
