@@ -1,6 +1,6 @@
 # Fraud Detection 
 
-> Note: This is a demo application - see the [Story](DEMO_STORY.md) page for how to deliver it.
+> Note: This is a demo application - see the [Story](docs/STORY.md) page for how to deliver it.
 
 ## Getting Started
 

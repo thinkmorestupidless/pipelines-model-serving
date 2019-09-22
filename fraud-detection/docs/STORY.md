@@ -14,6 +14,10 @@ TODO
 
 ### The Pipelines Implementation
 
+Here's our Fraud Detection System:
+
+![Architecture Overview Diagram](arch-overview.png "Architecture Overview Diagram")
+
 Show the diagram below and explain how data flows through the pipeline.
 
 Explain how:
@@ -23,8 +27,6 @@ Explain how:
 - Data leaving the pipeline can be sent to multiple endpoints.
 
 Show the running Pipeline in the console and start pushing data in.
-
-Ingress -> Device Filter -> Fraud Detector -> Egress
 
 ---
 
