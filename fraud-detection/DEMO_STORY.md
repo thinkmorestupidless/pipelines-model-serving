@@ -2,11 +2,11 @@
 
 ## Outline
 
-- The Challenges of Fraud Detection
-- The Pipelines Implementation
-- Trusted Devices
-- Serving Machine Learning Models
-- Summary
+- [The Challenges of Fraud Detection](#the-challenges-of-fraud-detection)
+- [The Pipelines Implementation](#the-pipelines-implementation)
+- [Trusted Devices](#trusted-devices)
+- [Serving Machine Learning Models](#serving-machine-learning-models)
+- [Summary](#summary)
 
 ### The Challenges of Fraud Detection
 
@@ -26,6 +26,8 @@ Show the running Pipeline in the console and start pushing data in.
 
 Ingress -> Device Filter -> Fraud Detector -> Egress
 
+---
+
 ### Trusted Devices
 
 Enhancing data can be problematic, it can often slow down a pipeline and place pressure on other systems when the pipeline is under load.
@@ -34,6 +36,8 @@ The Lightbend Platform is uniquely positioned to solve this problem as it provid
 
 > I don't aim to provide too much detail on Akka Cluster here - just enough to explain the value and how it compliments the streaming solution we're focused on to provide a complete solution.
 
+---
+
 ### Serving Machine Learning Models
 
 Machine Learning is a constantly-evolving field and any system that relies on ML models for its operation needs to be capable of easily updating its models in production environments. Fraud Detection measures are also constantly developing as new fraud detection algorithms are developed to counteract new attacks. 
@@ -41,6 +45,8 @@ Machine Learning is a constantly-evolving field and any system that relies on ML
 A Pipelines Streamlet can easily be configured to handle incoming streams of serialised models. So pushing a new model to production becomes as simple as pushing a serialised model to a Kafka topic or an HTTP endpoint or whatever mechanism your data science team are comfortable with using.
 
 > Streamlets consume streams - those streams can consist of data to be scored, or the models that are doing the scoring. In this way we can stream the processing logic as well as the data being processed. 
+
+---
 
 ### Summary
 
