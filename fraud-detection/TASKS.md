@@ -14,9 +14,10 @@ Ideally this would be an `ask` on an actor running in a cluster tied to the stre
 
 My thoughts on doing this were to:
 
-- [ ] Generate a set of random UUIDs representing Customer Ids
-- [ ] For each customer UUID generate a set of Device Ids - flag some of those Ids as trusted
-- [ ] Load the `creditcard.csv` data and assign a random Customer UUID to each tx as well as a random Device Id related to that Customer
+- [x] Generate a set of random UUIDs representing Customer Ids
+- [x] For each customer UUID generate a set of Device Ids - flag some of those Ids as trusted
+- [x] Load the `creditcard.csv` data and assign a random Customer UUID to each tx as well as a random Device Id related to that Customer
+- [ ] Write the new data out to a new file (including headers)
 - [ ] Load the Customers and their Device IDs into the Lagom service
 - [ ] Add the service call to the running Pipeline so Lagom's `runAll` and Pipeline's `runLocal` can bring everything up locally to test as well as running remotely on K8s 
 
