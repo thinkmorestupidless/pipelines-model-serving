@@ -108,6 +108,7 @@ lazy val fraudDetectionCustomerGenerator = (project in file("./fraud-detection/c
     mainClass := Some("com.lightbend.fraud.gen.Main"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-stream" % "2.5.25",
+      "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "0.18",
       "org.slf4j" % "slf4j-simple" % "1.7.28"
     )
   )
