@@ -54,12 +54,15 @@ object Main {
       outputFile.delete()
     }
 
+    val headers = ByteString("CustomerId,DeviceId,Time,V1,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14,V15,V16,V17,V18,V19,V20,V21,V22,V23,V24,V25,V26,V27,V28,Amount,Class")
+
     FileIO.fromPath(Paths.get(inputPathStr))
       .via(CsvParsing.lineScanner())
-      .via(CsvToMap.toMap())
+      .drop(1)
       .map(row => addRandomCustomerAndDevice(row, customers))
-      .map(_.values.toList.map(_.utf8String))
+      .map(_.map(_.utf8String))
       .via(CsvFormatting.format())
+      .prepend(Source.single(headers))
       .runWith(FileIO.toPath(outputPath))
       .onComplete {
         case Success(_) => log.info("All Done!")
@@ -67,10 +70,10 @@ object Main {
       }
   }
 
-  def addRandomCustomerAndDevice(row: Map[String, ByteString], customers: List[Customer]): Map[String, ByteString] = {
+  def addRandomCustomerAndDevice(row: List[ByteString], customers: List[Customer]): List[ByteString] = {
     val customer = customers(r.nextInt(customers.size))
     val device = customer.devices(r.nextInt(customer.devices.size))
-    row ++ List((CustomerId -> ByteString(customer.id.toString)), (DeviceId -> ByteString(device.id.toString)))
+    List(ByteString(customer.id.toString), ByteString(device.id.toString)) ::: row
   }
 
   def generateCustomers()(implicit system: ActorSystem, mat: Materializer): Future[Seq[Customer]] = {
