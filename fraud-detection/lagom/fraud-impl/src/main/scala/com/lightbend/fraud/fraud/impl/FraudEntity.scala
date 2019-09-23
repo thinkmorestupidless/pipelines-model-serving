@@ -1,98 +1,74 @@
 package com.lightbend.fraud.fraud.impl
 
-import java.time.LocalDateTime
-
 import akka.Done
-import com.lightbend.lagom.scaladsl.persistence.{ AggregateEvent, AggregateEventTag, PersistentEntity }
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity.ReplyType
+import com.lightbend.lagom.scaladsl.persistence.{ AggregateEvent, AggregateEventTag, PersistentEntity }
 import com.lightbend.lagom.scaladsl.playjson.{ JsonSerializer, JsonSerializerRegistry }
 import play.api.libs.json.{ Format, Json }
 
 import scala.collection.immutable.Seq
 
-/**
- * This is an event sourced entity. It has a state, [[FraudState]], which
- * stores what the greeting should be (eg, "Hello").
- *
- * Event sourced entities are interacted with by sending them commands. This
- * entity supports two commands, a [[UseGreetingMessage]] command, which is
- * used to change the greeting, and a [[Hello]] command, which is a read
- * only command which returns a greeting to the name specified by the command.
- *
- * Commands get translated to events, and it's the events that get persisted by
- * the entity. Each event will have an event handler registered for it, and an
- * event handler simply applies an event to the current state. This will be done
- * when the event is first created, and it will also be done when the entity is
- * loaded from the database - each event will be replayed to recreate the state
- * of the entity.
- *
- * This entity defines one event, the [[GreetingMessageChanged]] event,
- * which is emitted when a [[UseGreetingMessage]] command is received.
- */
 class FraudEntity extends PersistentEntity {
 
   override type Command = FraudCommand[_]
   override type Event = FraudEvent
-  override type State = FraudState
+  override type State = CustomerState
 
   /**
    * The initial state. This is used if there is no snapshotted state to be found.
    */
-  override def initialState: FraudState = FraudState("Hello", LocalDateTime.now.toString)
+  override def initialState: CustomerState = CustomerState(List.empty)
 
   /**
    * An entity can define different behaviours for different states, so the behaviour
    * is a function of the current state to a set of actions.
    */
   override def behavior: Behavior = {
-    case FraudState(message, _) => Actions().onCommand[UseGreetingMessage, Done] {
+    case CustomerState(_) => Actions().onCommand[CreateCustomer, String] {
 
-      // Command handler for the UseGreetingMessage command
-      case (UseGreetingMessage(newMessage), ctx, state) =>
-        // In response to this command, we want to first persist it as a
-        // GreetingMessageChanged event
+      case (CreateCustomer(_), ctx, _) =>
         ctx.thenPersist(
-          GreetingMessageChanged(newMessage)) { _ =>
-            // Then once the event is successfully persisted, we respond with done.
-            ctx.reply(Done)
+          CustomerCreated(entityId)) { _ =>
+            ctx.reply(entityId)
           }
 
-    }.onReadOnlyCommand[Hello, String] {
+    }.onCommand[AddDevice, Device] {
 
-      // Command handler for the Hello command
-      case (Hello(name), ctx, state) =>
-        // Reply with a message built from the current message, and the name of
-        // the person we're meant to say hello to.
-        ctx.reply(s"$message, $name!")
+      case (AddDevice(deviceId, isTrusted), ctx, _) =>
+        ctx.thenPersist(
+          DeviceAdded(entityId, deviceId, isTrusted)) { _ =>
+            ctx.reply(Device(deviceId, isTrusted))
+          }
+
+    }.onReadOnlyCommand[GetDevice, Device] {
+
+      case (GetDevice(deviceId), ctx, state) =>
+        val device = state.devices.find(_.uuid == deviceId).get
+        ctx.reply(device)
 
     }.onEvent {
 
-      // Event handler for the GreetingMessageChanged event
-      case (GreetingMessageChanged(newMessage), state) =>
-        // We simply update the current state to use the greeting message from
-        // the event.
-        FraudState(newMessage, LocalDateTime.now().toString)
+      case (CustomerCreated(_), state) =>
+        state
+
+      case (DeviceAdded(_, deviceId, isTrusted), state) =>
+        val newDevices = state.devices :+ Device(deviceId, isTrusted)
+        state.copy(devices = newDevices)
 
     }
   }
 }
 
-/**
- * The current state held by the persistent entity.
- */
-case class FraudState(message: String, timestamp: String)
+case class CustomerState(devices: List[Device])
 
-object FraudState {
-  /**
-   * Format for the hello state.
-   *
-   * Persisted entities get snapshotted every configured number of events. This
-   * means the state gets stored to the database, so that when the entity gets
-   * loaded, you don't need to replay all the events, just the ones since the
-   * snapshot. Hence, a JSON format needs to be declared so that it can be
-   * serialized and deserialized when storing to and from the database.
-   */
-  implicit val format: Format[FraudState] = Json.format
+object CustomerState {
+  implicit val format: Format[CustomerState] = Json.format
+}
+
+case class Device(uuid: String, isTrusted: Boolean)
+
+object Device {
+  implicit val format: Format[Device] = Json.format
 }
 
 /**
@@ -106,20 +82,16 @@ object FraudEvent {
   val Tag: AggregateEventTag[FraudEvent] = AggregateEventTag[FraudEvent]
 }
 
-/**
- * An event that represents a change in greeting message.
- */
-case class GreetingMessageChanged(message: String) extends FraudEvent
+case class CustomerCreated(uuid: String) extends FraudEvent
 
-object GreetingMessageChanged {
+object CustomerCreated {
+  implicit val format: Format[CustomerCreated] = Json.format
+}
 
-  /**
-   * Format for the greeting message changed event.
-   *
-   * Events get stored and loaded from the database, hence a JSON format
-   * needs to be declared so that they can be serialized and deserialized.
-   */
-  implicit val format: Format[GreetingMessageChanged] = Json.format
+case class DeviceAdded(customerId: String, deviceId: String, trusted: Boolean) extends FraudEvent
+
+object DeviceAdded {
+  implicit val format: Format[DeviceAdded] = Json.format
 }
 
 /**
@@ -127,48 +99,22 @@ object GreetingMessageChanged {
  */
 sealed trait FraudCommand[R] extends ReplyType[R]
 
-/**
- * A command to switch the greeting message.
- *
- * It has a reply type of [[Done]], which is sent back to the caller
- * when all the events emitted by this command are successfully persisted.
- */
-case class UseGreetingMessage(message: String) extends FraudCommand[Done]
+case class CreateCustomer(uuid: String) extends FraudCommand[String]
 
-object UseGreetingMessage {
-
-  /**
-   * Format for the use greeting message command.
-   *
-   * Persistent entities get sharded across the cluster. This means commands
-   * may be sent over the network to the node where the entity lives if the
-   * entity is not on the same node that the command was issued from. To do
-   * that, a JSON format needs to be declared so the command can be serialized
-   * and deserialized.
-   */
-  implicit val format: Format[UseGreetingMessage] = Json.format
+object CreateCustomer {
+  implicit val format: Format[CreateCustomer] = Json.format
 }
 
-/**
- * A command to say hello to someone using the current greeting message.
- *
- * The reply type is String, and will contain the message to say to that
- * person.
- */
-case class Hello(name: String) extends FraudCommand[String]
+case class GetDevice(deviceId: String) extends FraudCommand[Device]
 
-object Hello {
+object GetDevice {
+  implicit val format: Format[GetDevice] = Json.format
+}
 
-  /**
-   * Format for the hello command.
-   *
-   * Persistent entities get sharded across the cluster. This means commands
-   * may be sent over the network to the node where the entity lives if the
-   * entity is not on the same node that the command was issued from. To do
-   * that, a JSON format needs to be declared so the command can be serialized
-   * and deserialized.
-   */
-  implicit val format: Format[Hello] = Json.format
+case class AddDevice(uuid: String, trusted: Boolean) extends FraudCommand[Device]
+
+object AddDevice {
+  implicit val format: Format[AddDevice] = Json.format
 }
 
 /**
@@ -182,8 +128,9 @@ object Hello {
  */
 object FraudSerializerRegistry extends JsonSerializerRegistry {
   override def serializers: Seq[JsonSerializer[_]] = Seq(
-    JsonSerializer[UseGreetingMessage],
-    JsonSerializer[Hello],
-    JsonSerializer[GreetingMessageChanged],
-    JsonSerializer[FraudState])
+    JsonSerializer[GetDevice],
+    JsonSerializer[AddDevice],
+    JsonSerializer[CustomerCreated],
+    JsonSerializer[DeviceAdded],
+    JsonSerializer[CustomerState])
 }

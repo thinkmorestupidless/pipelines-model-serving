@@ -15,7 +15,7 @@ class FraudEntitySpec extends WordSpec with Matchers with BeforeAndAfterAll {
     TestKit.shutdownActorSystem(system)
   }
 
-  private def withTestDriver(block: PersistentEntityTestDriver[FraudCommand[_], FraudEvent, FraudState] => Unit): Unit = {
+  private def withTestDriver(block: PersistentEntityTestDriver[FraudCommand[_], FraudEvent, CustomerState] => Unit): Unit = {
     val driver = new PersistentEntityTestDriver(system, new FraudEntity, "fraud-1")
     block(driver)
     driver.getAllIssues should have size 0

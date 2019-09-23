@@ -6,81 +6,53 @@ import com.lightbend.lagom.scaladsl.api.broker.kafka.{ KafkaProperties, Partitio
 import com.lightbend.lagom.scaladsl.api.{ Descriptor, Service, ServiceCall }
 import play.api.libs.json.{ Format, Json }
 
-object FraudService {
-  val TOPIC_NAME = "greetings"
-}
-
-/**
- * The fraud service interface.
- * <p>
- * This describes everything that Lagom needs to know about how to serve and
- * consume the FraudService.
- */
 trait FraudService extends Service {
 
-  /**
-   * Example: curl http://localhost:9000/api/hello/Alice
-   */
-  def hello(id: String): ServiceCall[NotUsed, String]
+  def createCustomer(): ServiceCall[CreateCustomer, CustomerCreatedResponse]
 
-  /**
-   * Example: curl -H "Content-Type: application/json" -X POST -d '{"message":
-   * "Hi"}' http://localhost:9000/api/hello/Alice
-   */
-  def useGreeting(id: String): ServiceCall[GreetingMessage, Done]
+  def addDevice(customerId: String): ServiceCall[Device, DeviceAddedResponse]
 
-  /**
-   * This gets published to Kafka.
-   */
-  def greetingsTopic(): Topic[GreetingMessageChanged]
+  def getDevice(customerId: String, deviceId: String): ServiceCall[NotUsed, Device]
 
   override final def descriptor: Descriptor = {
     import Service._
     // @formatter:off
     named("fraud")
       .withCalls(
-        pathCall("/api/hello/:id", hello _),
-        pathCall("/api/hello/:id", useGreeting _))
-      .withTopics(
-        topic(FraudService.TOPIC_NAME, greetingsTopic _)
-          // Kafka partitions messages, messages within the same partition will
-          // be delivered in order, to ensure that all messages for the same user
-          // go to the same partition (and hence are delivered in order with respect
-          // to that user), we configure a partition key strategy that extracts the
-          // name as the partition key.
-          .addProperty(
-            KafkaProperties.partitionKeyStrategy,
-            PartitionKeyStrategy[GreetingMessageChanged](_.name)))
+        pathCall("/api/customers", createCustomer _),
+        pathCall("/api/customers/:customerId/devices", addDevice _),
+        pathCall("/api/customers/:customerId/devices/:deviceId", getDevice _))
       .withAutoAcl(true)
     // @formatter:on
   }
 }
 
-/**
- * The greeting message class.
- */
-case class GreetingMessage(message: String)
+case class CreateCustomer(customerId: String)
 
-object GreetingMessage {
-  /**
-   * Format for converting greeting messages to and from JSON.
-   *
-   * This will be picked up by a Lagom implicit conversion from Play's JSON format to Lagom's message serializer.
-   */
-  implicit val format: Format[GreetingMessage] = Json.format[GreetingMessage]
+object CreateCustomer {
+  implicit val format: Format[CreateCustomer] = Json.format
 }
 
-/**
- * The greeting message class used by the topic stream.
- * Different than [[GreetingMessage]], this message includes the name (id).
- */
-case class GreetingMessageChanged(name: String, message: String)
+case class CustomerCreatedResponse(customerId: String)
 
-object GreetingMessageChanged {
-  /**
-   * Format for converting greeting messages to and from JSON.
-   *
-   * This will be picked up by a Lagom implicit conversion from Play's JSON format to Lagom's message serializer.
-   */
-  implicit val format: Format[GreetingMessageChanged] = Json.format[GreetingMessageChanged]
+object CustomerCreatedResponse {
+  implicit val format: Format[CustomerCreatedResponse] = Json.format
+}
+
+case class AddDevice(deviceId: String, isTrusted: Boolean)
+
+object AddDevice {
+  implicit val format: Format[AddDevice] = Json.format
+}
+
+case class Device(deviceId: String, isTrusted: Boolean)
+
+object Device {
+  implicit val format: Format[Device] = Json.format
+}
+
+case class DeviceAddedResponse(customerId: String, device: Device)
+
+object DeviceAddedResponse {
+  implicit val format: Format[DeviceAddedResponse] = Json.format
 }
