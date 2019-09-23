@@ -10,11 +10,12 @@ A couple of things before you `buildAndPublish`
 
 You'll need to:
 
-- Download the data used to train the model and feed through the running Pipeline. 
+- [Download the data used to train the model and feed through the running Pipeline.](#downloading-sample-data)
 
 And, optionally
 
-- Train and export the model(s)
+- [Generate the data with Customer and Device IDs](#generate-the-data-with-customer-and-device-ids)
+- [Train and export the model(s)](#trainingexporting-the-models)
 
 ### Downloading Sample Data
 
@@ -27,6 +28,12 @@ https://fraud-detection-demo.s3-eu-west-1.amazonaws.com/creditcard.csv.zip
 - Place a copy in 
   - `./fraud-detection/notebooks/data` and 
   - `./fraud-detection/pipelines/src/main/resources/data`
+  
+### Generate the data with Customer and Device IDs
+
+The `fraudDetectionCustomerGenerator` will do this for you - conveniently loading the `creditcard.csv` data and assigning random ids for you.
+
+Configuring the source and destination files is done via the `application.conf` for that project.
   
 ### Training/Exporting the Models
 
