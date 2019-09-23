@@ -65,6 +65,7 @@ object Main {
       .prepend(Source.single(headers))
       .runWith(FileIO.toPath(outputPath))
       .onComplete {
+        // Careful! This _could_ be an IO Failure from FileIO.toPath()
         case Success(_) => log.info("All Done!")
         case Failure(e) => log.warn(s"Failed to write CSV file -> $e")
       }
