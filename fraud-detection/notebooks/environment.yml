@@ -81,7 +81,7 @@ dependencies:
   - imageio=2.5.0=py37_0
   - imagesize=1.1.0=py37_0
   - importlib_metadata=0.19=py37_0
-  - intel-openmp=2019.5=281
+  - intel-openmp=2019.4
   - ipykernel=5.1.2=py37h39e3cac_0
   - ipython=7.8.0=py37h39e3cac_0
   - ipython_genutils=0.2.0=py37_0

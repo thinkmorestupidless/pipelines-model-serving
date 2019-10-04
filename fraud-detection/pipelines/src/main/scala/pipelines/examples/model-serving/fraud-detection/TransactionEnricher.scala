@@ -44,7 +44,8 @@ object TransactionEnricher extends AkkaStreamlet {
       v18 = e.v18,
       v19 = e.v19,
       v21 = e.v21,
-      amount = e.amount
+      amount = e.amount,
+      transactionId = e.transactionId
     ))
 
   }

@@ -6,7 +6,7 @@
     "fields":[
       {
         "name": "time",
-        "type": "float"
+        "type": "long"
       },
       {
         "name": "v1",
@@ -79,6 +79,10 @@
       {
         "name": "amount",
         "type": "float"
+      },
+      {
+        "name": "transactionId",
+        "type": "string"
       }
     ]
 }

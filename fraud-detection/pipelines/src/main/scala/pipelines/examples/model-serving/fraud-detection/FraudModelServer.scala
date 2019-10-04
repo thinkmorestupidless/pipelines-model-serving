@@ -31,9 +31,9 @@ final case object FraudModelServer extends AkkaStreamlet {
   final override val shape = StreamletShape.withInlets(in0, in1).withOutlets(out)
 
   // Declare the volume mount: 
-  private val persistentDataMount =
-    VolumeMount("persistence-data-mount", "/data", ReadWriteMany)
-  override def volumeMounts = Vector(persistentDataMount)
+  //  private val persistentDataMount =
+  //    VolumeMount("persistence-data-mount", "/fraud/data", ReadWriteMany)
+  //  override def volumeMounts = Vector(persistentDataMount)
 
   val modelFactory = MultiModelFactory(
     Map(
@@ -48,7 +48,8 @@ final case object FraudModelServer extends AkkaStreamlet {
     val modelPersist = ModelPersistence[TxEnrichedRecord, Double](
       modelName = context.streamletRef,
       modelFactory = modelFactory,
-      baseDirPath = new File(persistentDataMount.path))
+      //      baseDirPath = new File(persistentDataMount.path))
+      baseDirPath = new File("./"))
 
     val modelserver = context.system.actorOf(
       ModelServingActor.props[TxEnrichedRecord, Double](
@@ -79,7 +80,7 @@ final case object FraudModelServer extends AkkaStreamlet {
 }
 
 /**
- * Test program for [[WineModelServer]]. Just loads the PMML model and uses it
+ * Test program for [[FraudModelServer]]. Just loads the PMML model and uses it
  * to score one record. So, this program focuses on ensuring the logic works
  * for any model, but doesn't exercise all the available models.
  * For testing purposes, only.
@@ -90,7 +91,7 @@ final case object FraudModelServer extends AkkaStreamlet {
  * WineModelServerMain.main(Array("-n","3","-f","1000"))
  * ```
  */
-object WineModelServerMain {
+object FraudModelServerrMain {
   val defaultCount = 3
   val defaultFrequencyMillis = 1000.milliseconds
 
@@ -124,7 +125,7 @@ object WineModelServerMain {
       modelBytes = Some(pmml),
       modelSourceLocation = None)
 
-    val record = TxEnrichedRecord(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f)
+    val record = TxEnrichedRecord(0.0.toLong, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, "")
 
     for (i ← 0 until count) {
       modelserver.ask(descriptor)

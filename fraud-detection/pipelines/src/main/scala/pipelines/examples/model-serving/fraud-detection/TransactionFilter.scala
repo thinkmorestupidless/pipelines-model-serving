@@ -24,11 +24,11 @@ object TransactionFilter extends AkkaStreamlet {
   override def createLogic = new RunnableGraphStreamletLogic() {
 
     // load filtering resource using config key
-    val filteringResourcePath = streamletConfig.getString(FilteringResource.key)
-    val merchantIds = AuthorizedMerchants.getMerchantIds(filteringResourcePath)
+    //    val filteringResourcePath = streamletConfig.getString(FilteringResource.key)
+    //    val merchantIds = AuthorizedMerchants.getMerchantIds(filteringResourcePath)
 
     def runnableGraph = atLeastOnceSource(in).via(flow.named("merchantfilter")).to(atLeastOnceSink(out))
 
-    def flow = Flow[(TxRecord, PipelinesContext)].filter(tx ⇒ !merchantIds.contains(tx._1.amount))
+    def flow = Flow[(TxRecord, PipelinesContext)]
   }
 }

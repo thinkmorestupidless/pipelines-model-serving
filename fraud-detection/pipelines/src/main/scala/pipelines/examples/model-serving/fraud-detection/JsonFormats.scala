@@ -1,5 +1,7 @@
 package pipelines.examples.modelserving.frauddetection
 
+import java.util.UUID
+
 import pipelines.examples.modelserving.frauddetection.data.TxRecord
 import spray.json._
 
@@ -26,6 +28,7 @@ case object JsonTxFormat extends DefaultJsonProtocol {
       "v19" -> JsNumber(tx.v19.toDouble),
       "v21" -> JsNumber(tx.v21.toDouble),
       "amount" -> JsNumber(tx.amount.toDouble),
+      "transactionId" -> JsString(tx.transactionId.toString)
     )
 
     def read(json: JsValue) = {
@@ -48,32 +51,36 @@ case object JsonTxFormat extends DefaultJsonProtocol {
         "v18",
         "v19",
         "v21",
-        "amount"
+        "amount",
+        "transactionId"
       ) match {
-        case Seq(
-        JsNumber(time),
-        JsNumber(v1),
-        JsNumber(v2),
-        JsNumber(v3),
-        JsNumber(v4),
-        JsNumber(v5),
-        JsNumber(v6),
-        JsNumber(v7),
-        JsNumber(v9),
-        JsNumber(v10),
-        JsNumber(v11),
-        JsNumber(v12),
-        JsNumber(v14),
-        JsNumber(v16),
-        JsNumber(v17),
-        JsNumber(v18),
-        JsNumber(v19),
-        JsNumber(v21),
-        JsNumber(amount)) =>
-          TxRecord(time.toFloat, v1.toFloat, v2.toFloat, v3.toFloat, v4.toFloat, v5.toFloat, v6.toFloat, v7.toFloat, v9.toFloat, v10.toFloat, v11.toFloat, v12.toFloat, v14.toFloat, v16.toFloat, v17.toFloat, v18.toFloat, v19.toFloat, v21.toFloat, amount.toFloat)
+          case Seq(
+            JsNumber(time),
+            JsNumber(v1),
+            JsNumber(v2),
+            JsNumber(v3),
+            JsNumber(v4),
+            JsNumber(v5),
+            JsNumber(v6),
+            JsNumber(v7),
+            JsNumber(v9),
+            JsNumber(v10),
+            JsNumber(v11),
+            JsNumber(v12),
+            JsNumber(v14),
+            JsNumber(v16),
+            JsNumber(v17),
+            JsNumber(v18),
+            JsNumber(v19),
+            JsNumber(v21),
+            JsNumber(amount),
+            JsString(transactionId)) ⇒
+            TxRecord(time.toLong, v1.toFloat, v2.toFloat, v3.toFloat, v4.toFloat, v5.toFloat, v6.toFloat, v7.toFloat,
+              v9.toFloat, v10.toFloat, v11.toFloat, v12.toFloat, v14.toFloat, v16.toFloat, v17.toFloat, v18.toFloat, v19.toFloat,
+              v21.toFloat, amount.toFloat, "")
 
-        case other => deserializationError(s"Expected TxRecord but got $other")
-      }
+          case other ⇒ deserializationError(s"Expected TxRecord but got $other")
+        }
     }
   }
 }

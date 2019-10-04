@@ -1,17 +1,21 @@
 package pipelines.examples.modelserving.frauddetection
 
+import java.util.UUID
+
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import pipelines.streamlets.avro.AvroOutlet
 import pipelines.streamlets.StreamletShape
 import pipelines.akkastream.AkkaStreamlet
-import pipelines.akkastream.scaladsl.{ RunnableGraphStreamletLogic }
+import pipelines.akkastream.scaladsl.RunnableGraphStreamletLogic
 import pipelinesx.config.ConfigUtil
 import pipelinesx.config.ConfigUtil.implicits._
+
 import scala.concurrent.duration._
 import scala.collection.JavaConverters._
 import com.lightbend.modelserving.model.{ ModelDescriptor, ModelType }
 import com.lightbend.modelserving.model.util.ModelMainBase
+import pipelinesx.logging.{ Logger, LoggingUtil }
 
 /**
  * One at a time every two minutes, loads a PMML or TensorFlow model and
@@ -31,9 +35,11 @@ final case object FraudModelIngress extends AkkaStreamlet {
 
 object FraudModelIngressUtil {
 
+  val logger: Logger = LoggingUtil.getLogger(FraudModelIngressUtil.getClass)
+
   lazy val modelFrequencySeconds: FiniteDuration =
     ConfigUtil.default
-      .getOrElse[Int]("fraud-detection.model-frequency-seconds")(120).seconds
+      .getOrElse[Int]("fraud-detection.model-frequency-seconds")(5).seconds
 
   // TODO: Add this logic to ConfigUtil?.
   lazy val fraudModelsResources: Map[ModelType, Seq[String]] =
@@ -54,7 +60,12 @@ object FraudModelIngressUtil {
       frequency:       FiniteDuration              = modelFrequencySeconds): Source[ModelDescriptor, NotUsed] = {
     val recordsReader = FraudModelReader(modelsResources)
     Source.repeat(recordsReader)
-      .map(reader ⇒ reader.next())
+      .map(reader ⇒ {
+        val newModel = reader.next()
+        logger.info("New Model Deployed: " + newModel.modelName)
+        ModelDescriptor(newModel.modelName + "-" + UUID.randomUUID().toString, newModel.description, newModel.modelType,
+          newModel.modelBytes, newModel.modelSourceLocation)
+      })
       .throttle(1, frequency)
   }
 }

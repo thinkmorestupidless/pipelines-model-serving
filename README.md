@@ -1,4 +1,3 @@
-# Pipelines Machine Learning Examples
 
 This project contains three example pipelines:
 

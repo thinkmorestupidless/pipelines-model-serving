@@ -8,6 +8,7 @@ object Dependencies {
   val akkaSprayJson   = "com.typesafe.akka"              %% "akka-http-spray-json"      % akkaHTTPJSONVersion
   val alpakkaFile     = "com.lightbend.akka"             %% "akka-stream-alpakka-file"  % alpakkaFileVersion
   val alpakkaKafka    = "com.typesafe.akka"              %% "akka-stream-kafka"         % alpakkaKafkaVersion
+  val alpakkaInflux   = "com.lightbend.akka"              % "akka-stream-alpakka-influxdb_2.12" % alpakkaInfluxVersion
   val tensorflow      = "org.tensorflow"                  % "tensorflow"                % tensorflowVersion
   val tensorflowProto = "org.tensorflow"                  % "proto"                     % tensorflowVersion
   val pmml            = "org.jpmml"                       % "pmml-evaluator"            % PMMLVersion

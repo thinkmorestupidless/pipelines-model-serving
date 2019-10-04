@@ -25,7 +25,7 @@ lazy val wineModelServingPipeline = (project in file("./wine-quality-ml"))
   .settings(
     name := s"wine-quality-ml-$user",
     version := thisVersion,
-    pipelinesDockerRegistry := Some("docker-registry-default.fiorano.lightbend.com"),
+    pipelinesDockerRegistry := Some("docker-registry-default.gsa2.lightbend.com"),
     libraryDependencies ++= Seq(influx, scalaTest),
     avroSpecificSourceDirectories in Compile ++=
       Seq(new java.io.File("model-serving/src/main/avro"))
@@ -74,7 +74,7 @@ lazy val fraudDetectionPipeline = (project in file("./fraud-detection/pipelines"
     name := s"fraud-detection-$user",
     version := thisVersion,
     runLocalConfigFile := Some("fraud-detection/pipelines/src/main/resources/local.conf"),
-    pipelinesDockerRegistry := Some("docker-registry-default.fiorano.lightbend.com"),
+    pipelinesDockerRegistry := Some("gcr.io/gsa-pipeliners"),
     libraryDependencies ++= Seq(akkaSprayJson, influx, scalaTest),
     avroSpecificSourceDirectories in Compile ++=
       Seq(new java.io.File("model-serving/src/main/avro"))
