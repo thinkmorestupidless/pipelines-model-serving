@@ -72,7 +72,7 @@ object FraudRecordGeneratorUtil {
 
   lazy val dataFrequencyMilliseconds: FiniteDuration =
     ConfigUtil.default
-      .getOrElse[Int](rootConfigKey + ".data-frequency-milliseconds")(1).milliseconds
+      .getOrElse[Int](rootConfigKey + ".data-frequency-milliseconds")(1).millisecond
 
   def makeSource(
       configRoot: String         = rootConfigKey,
