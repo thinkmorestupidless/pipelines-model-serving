@@ -1,0 +1,20 @@
+{
+    "namespace": "pipelines.examples.frauddetection.data",
+    "type": "record",
+    "name": "ScoredTransaction",
+    "fields":[
+      {
+        "name": "inputRecord",
+        "type": "CustomerTransaction"
+      },
+      {
+        "name": "modelResult",
+        "type": "pipelines.examples.frauddetection.data.ScoreFromTheModel"
+      },
+      {
+        "name": "modelResultMetadata",
+        "type": "com.lightbend.modelserving.model.ModelResultMetadata"
+      }
+  ]
+}
+

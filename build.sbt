@@ -69,18 +69,39 @@ lazy val airlineFlightsModelServingPipeline = (project in file("./airline-flight
 // below. See the README for details.
 lazy val fraudDetectionPipeline = (project in file("./fraud-detection/pipelines"))
   .enablePlugins(PipelinesApplicationPlugin)
-  .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
   .settings(
     name := s"fraud-detection-$user",
     version := thisVersion,
     runLocalConfigFile := Some("fraud-detection/pipelines/src/main/resources/local.conf"),
-    pipelinesDockerRegistry := Some("gcr.io/gsa-pipeliners"),
-    libraryDependencies ++= Seq(akkaSprayJson, influx, scalaTest),
+    pipelinesDockerRegistry := Some("gcr.io/gsa-pipeliners")
+  )
+  .settings(commonSettings)
+  .dependsOn(fraudDetectionSchema, fraudDetectionSpark, fraudDetectionAkkaStreams, pipelinesx, modelServing)
+
+lazy val fraudDetectionSchema = (project in file("./fraud-detection/schema"))
+  .enablePlugins(PipelinesLibraryPlugin)
+  .settings(
     avroSpecificSourceDirectories in Compile ++=
       Seq(new java.io.File("model-serving/src/main/avro"))
   )
-  .settings(commonSettings)
-  .dependsOn(pipelinesx, modelServing)
+
+lazy val fraudDetectionAkkaStreams = (project in file("./fraud-detection/akka-streams"))
+  .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= Seq(akkaSprayJson, influx, scalaTest)
+  )
+  .dependsOn(fraudDetectionSchema, modelServing, pipelinesx)
+
+lazy val fraudDetectionSpark = (project in file("./fraud-detection/spark"))
+  .enablePlugins(PipelinesSparkLibraryPlugin)
+  .settings(
+    commonSettings,
+    Test / parallelExecution := false,
+    Test / fork := true,
+    libraryDependencies ++= Seq(scalaTest)
+  )
+  .dependsOn(fraudDetectionSchema)
 
 lazy val fraudDetectionCustomerServiceApi = (project in file("./fraud-detection/lagom/fraud-api"))
   .settings(
