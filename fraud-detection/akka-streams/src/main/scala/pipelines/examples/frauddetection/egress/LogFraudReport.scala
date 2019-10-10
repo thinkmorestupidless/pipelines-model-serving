@@ -18,8 +18,7 @@ class LogFraudReport extends AkkaStreamlet {
 
     def theLogger = FlowWithPipelinesContext[FraudReport]
       .map { report ⇒
-        //        system.log.info(s"$report")
-        report
+        system.log.info(s"$report")
       }
 
     override def runnableGraph(): RunnableGraph[_] =
