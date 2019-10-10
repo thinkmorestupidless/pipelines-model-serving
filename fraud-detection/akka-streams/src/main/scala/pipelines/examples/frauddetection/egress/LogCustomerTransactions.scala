@@ -2,14 +2,16 @@ package pipelines.examples.frauddetection.egress
 
 import akka.NotUsed
 import akka.stream.ClosedShape
-import akka.stream.scaladsl.{ GraphDSL, Merge, RunnableGraph, Sink }
-import pipelines.akkastream.scaladsl.{ FlowWithPipelinesContext, RunnableGraphStreamletLogic }
-import pipelines.akkastream.{ AkkaStreamlet, PipelinesContext, StreamletLogic }
-import pipelines.examples.frauddetection.data.{ CustomerTransaction, ScoredTransaction }
+import akka.stream.scaladsl.{GraphDSL, Merge, RunnableGraph, Sink}
+import pipelines.akkastream.scaladsl.{FlowWithPipelinesContext, RunnableGraphStreamletLogic}
+import pipelines.akkastream.{AkkaStreamlet, PipelinesContext, StreamletLogic}
+import pipelines.examples.frauddetection.data.{CustomerTransaction, ScoredTransaction}
+import pipelines.examples.frauddetection.utils.InfluxDbSupport
 import pipelines.streamlets.StreamletShape
 import pipelines.streamlets.avro.AvroInlet
 
-class LogCustomerTransactions extends AkkaStreamlet {
+class LogCustomerTransactions extends AkkaStreamlet with InfluxDbSupport {
+  import InfluxDbSupport._
 
   val fromTheModel = AvroInlet[ScoredTransaction]("model")
   val fromTheMerchant = AvroInlet[CustomerTransaction]("merchant")
@@ -17,15 +19,18 @@ class LogCustomerTransactions extends AkkaStreamlet {
   val shape = StreamletShape.withInlets(fromTheModel, fromTheMerchant)
 
   override protected def createLogic(): StreamletLogic = new RunnableGraphStreamletLogic() {
+    val influxDb = connect(streamletConfig)
 
-    val theModelFlow = FlowWithPipelinesContext[ScoredTransaction].map { tx ⇒
-      if (tx.modelResult.value > 0.7) {
-        system.log.info(s"Transaction ${tx.inputRecord.transactionId} is FRAUDULENT!!!!!")
+    val theModelFlow = FlowWithPipelinesContext[ScoredTransaction].map { stx ⇒
+      influxDb.writeEnd(stx.inputRecord.transactionId, stx.modelResultMetadata.modelName, stx.modelResult.value)
+
+      if (stx.modelResult.value > 0.7) {
+        system.log.info(s"Transaction ${stx.inputRecord.transactionId} is FRAUDULENT!!!!!")
       } else {
-        system.log.info(s"Transaction ${tx.inputRecord.transactionId} => Approved By THE MODEL™")
+        system.log.info(s"Transaction ${stx.inputRecord.transactionId} => Approved By THE MODEL™")
       }
 
-      tx.inputRecord
+      stx.inputRecord
     }
 
     val theMerchantFlow = FlowWithPipelinesContext[CustomerTransaction].map { tx ⇒
@@ -47,4 +52,6 @@ class LogCustomerTransactions extends AkkaStreamlet {
         ClosedShape
       })
   }
+
+  override def configParameters = Vector(InfluxDBActive, InfluxDBHost, InfluxDBPort)
 }

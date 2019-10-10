@@ -26,17 +26,7 @@ import scala.concurrent.duration._
 final case object GenerateTransactions extends AkkaStreamlet with InfluxDbSupport {
   import InfluxDbSupport._
 
-  val out = AvroOutlet[CustomerTransaction]("transactions")
-
   final override val shape = StreamletShape(out)
-
-  val DataFrequency = IntegerConfigParameter(
-    key = "data-frequency",
-    description = "",
-    defaultValue = Some(100)
-  )
-
-  override def configParameters = Vector(DataFrequency, InfluxDBActive, InfluxDBHost, InfluxDBPort)
 
   override final def createLogic = new RunnableGraphStreamletLogic {
     val dataFrequency = FiniteDuration(streamletConfig.getInt("data-frequency"), "ms")
@@ -50,6 +40,17 @@ final case object GenerateTransactions extends AkkaStreamlet with InfluxDbSuppor
         })
         .to(atMostOnceSink(out))
   }
+
+  val out = AvroOutlet[CustomerTransaction]("transactions")
+
+  val DataFrequency = IntegerConfigParameter(
+    key = "data-frequency",
+    description = "",
+    defaultValue = Some(100)
+  )
+
+  override def configParameters = Vector(DataFrequency, InfluxDBActive, InfluxDBHost, InfluxDBPort)
+
 }
 
 object GenerateTransactionsUtil {

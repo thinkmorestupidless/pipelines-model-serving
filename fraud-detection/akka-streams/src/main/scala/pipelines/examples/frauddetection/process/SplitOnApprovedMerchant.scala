@@ -21,11 +21,12 @@ class SplitOnApprovedMerchant extends AkkaStreamlet {
   def isApprovedMerchant(tx: CustomerTransaction) =
     Random.nextInt(100) > 93
 
-  override protected def createLogic() = new SplitterLogic(everythingComesInHere, authorisedTransactionsGoLeft, everythingElseGoesRight) {
-    override def flow =
-      FlowWithPipelinesContext[CustomerTransaction]
-        .map { tx ⇒
-          if (isApprovedMerchant(tx)) Left(tx) else Right(tx)
-        }
+  override protected def createLogic() =
+    new SplitterLogic(everythingComesInHere, authorisedTransactionsGoLeft, everythingElseGoesRight) {
+      override def flow =
+        FlowWithPipelinesContext[CustomerTransaction]
+          .map { tx ⇒
+            if (isApprovedMerchant(tx)) Left(tx) else Right(tx)
+          }
   }
 }
