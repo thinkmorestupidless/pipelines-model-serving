@@ -31,11 +31,6 @@ final case object ScoreTransactionsAndServeModels extends AkkaStreamlet {
 
   final override val shape = StreamletShape.withInlets(dataComesInHere, modelsComeInHere).withOutlets(scoredTransactionsComeOutHere)
 
-  // Declare the volume mount: 
-  //  private val persistentDataMount =
-  //    VolumeMount("persistence-data-mount", "/fraud/data", ReadWriteMany)
-  //  override def volumeMounts = Vector(persistentDataMount)
-
   val modelFactory = MultiModelFactory(
     Map(
       ModelType.PMML -> FraudPMMLModelFactory,

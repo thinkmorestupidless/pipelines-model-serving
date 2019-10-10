@@ -19,11 +19,13 @@ class SplitOnApprovedMerchant extends AkkaStreamlet {
   val shape = StreamletShape.withInlets(everythingComesInHere).withOutlets(authorisedTransactionsGoLeft, everythingElseGoesRight)
 
   def isApprovedMerchant(tx: CustomerTransaction) =
-    Random.nextInt(100) > 99
+    Random.nextInt(100) > 93
 
   override protected def createLogic() = new SplitterLogic(everythingComesInHere, authorisedTransactionsGoLeft, everythingElseGoesRight) {
-    override def flow = FlowWithPipelinesContext[CustomerTransaction].map { tx ⇒
-      if (isApprovedMerchant(tx)) Left(tx) else Right(tx)
-    }
+    override def flow =
+      FlowWithPipelinesContext[CustomerTransaction]
+        .map { tx ⇒
+          if (isApprovedMerchant(tx)) Left(tx) else Right(tx)
+        }
   }
 }

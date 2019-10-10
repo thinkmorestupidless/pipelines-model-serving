@@ -20,13 +20,15 @@ class SplitOnFraudScore extends AkkaStreamlet with InfluxDbSupport {
   override protected def createLogic(): StreamletLogic = new SplitterLogic(everythingComesInHere, fraudulentTransactionsGoLeft, everythingElseGoesRight) {
     val influxDb = connect(streamletConfig)
 
-    override def flow: FlowWithPipelinesContext[ScoredTransaction, Either[ScoredTransaction, ScoredTransaction]] =
+    override def flow =
       FlowWithPipelinesContext[ScoredTransaction]
-        .map { stx ⇒
+        /*.map { stx ⇒
           influxDb.writeEnd(stx.inputRecord.transactionId, stx.modelResultMetadata.modelName, stx.modelResult.value)
           stx
-        }.map { stx ⇒
-          if (stx.modelResult.value > 0.5) Left(stx) else Right(stx)
+        }*/ .map { stx ⇒
+          system.log.info(s"fraud score == ${stx.modelResult.value}")
+          //          if (stx.modelResult.value > 0.5) Left(stx) else Right(stx)
+          Right(stx)
         }
   }
 

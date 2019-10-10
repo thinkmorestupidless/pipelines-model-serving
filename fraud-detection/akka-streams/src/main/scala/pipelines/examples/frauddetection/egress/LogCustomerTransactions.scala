@@ -1,8 +1,10 @@
 package pipelines.examples.frauddetection.egress
 
-import akka.stream.scaladsl.{ RunnableGraph, Sink }
+import akka.NotUsed
+import akka.stream.ClosedShape
+import akka.stream.scaladsl.{ GraphDSL, Merge, RunnableGraph, Sink }
 import pipelines.akkastream.scaladsl.{ FlowWithPipelinesContext, RunnableGraphStreamletLogic }
-import pipelines.akkastream.{ AkkaStreamlet, StreamletLogic }
+import pipelines.akkastream.{ AkkaStreamlet, PipelinesContext, StreamletLogic }
 import pipelines.examples.frauddetection.data.{ CustomerTransaction, ScoredTransaction }
 import pipelines.streamlets.StreamletShape
 import pipelines.streamlets.avro.AvroInlet
@@ -17,15 +19,32 @@ class LogCustomerTransactions extends AkkaStreamlet {
   override protected def createLogic(): StreamletLogic = new RunnableGraphStreamletLogic() {
 
     val theModelFlow = FlowWithPipelinesContext[ScoredTransaction].map { tx ⇒
-      system.log.info(s"Transaction ${tx.inputRecord.transactionId} => Approved By THE MODEL™")
+      if (tx.modelResult.value > 0.7) {
+        system.log.info(s"Transaction ${tx.inputRecord.transactionId} is FRAUDULENT!!!!!")
+      } else {
+        system.log.info(s"Transaction ${tx.inputRecord.transactionId} => Approved By THE MODEL™")
+      }
+
+      tx.inputRecord
     }
 
     val theMerchantFlow = FlowWithPipelinesContext[CustomerTransaction].map { tx ⇒
       system.log.info(s"Transaction ${tx.transactionId} => Automatically Approved")
+      tx
     }
 
-    override def runnableGraph(): RunnableGraph[_] =
-      atLeastOnceSource(fromTheModel).via(theModelFlow).to(Sink.ignore)
-    atLeastOnceSource(fromTheMerchant).via(theMerchantFlow).to(Sink.ignore)
+    def runnableGraph() =
+      RunnableGraph.fromGraph(GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] ⇒
+        import GraphDSL.Implicits._
+        val model = atLeastOnceSource(fromTheModel).via(theModelFlow)
+        val merchant = atLeastOnceSource(fromTheMerchant).via(theMerchantFlow)
+        val out = Sink.ignore
+
+        val merge = builder.add(Merge[(CustomerTransaction, PipelinesContext)](2))
+
+        model ~> merge ~> out
+        merchant ~> merge
+        ClosedShape
+      })
   }
 }

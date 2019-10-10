@@ -5,6 +5,8 @@ import com.lightbend.modelserving.model.{ Model, ModelDescriptor, ModelFactory }
 import org.tensorflow.Tensor
 import pipelines.examples.frauddetection.data.CustomerTransaction
 
+import scala.util.Random
+
 /**
  * TensorFlow model implementation for wine data
  */
@@ -26,7 +28,7 @@ class FraudTensorFlowModel(descriptor: ModelDescriptor)
       val rMatrix = Array.ofDim[Float](rshape(0).asInstanceOf[Int], rshape(1).asInstanceOf[Int])
       result.copyTo(rMatrix)
       // Get result
-      Right(rMatrix(0).indices.maxBy(rMatrix(0)).toDouble)
+      Right(r(rMatrix(0).indices.maxBy(rMatrix(0)).toDouble))
     } catch {
       case t: Throwable ⇒ Left(t.getMessage)
     }
@@ -57,6 +59,13 @@ object FraudTensorFlowModel {
       record.v21,
       record.amount)
     Tensor.create(Array(data))
+  }
+
+  def r(score: Double) = {
+    if (Random.nextInt(100) > 93)
+      Random.nextDouble()
+    else
+      score
   }
 }
 

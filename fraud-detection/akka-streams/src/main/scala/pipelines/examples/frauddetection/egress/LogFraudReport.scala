@@ -18,7 +18,7 @@ class LogFraudReport extends AkkaStreamlet {
 
     def theLogger = FlowWithPipelinesContext[FraudReport]
       .map { report ⇒
-        system.log.info(s"$report")
+        //        system.log.info(s"$report")
         report
       }
 
