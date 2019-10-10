@@ -70,7 +70,7 @@ lazy val airlineFlightsModelServingPipeline = (project in file("./airline-flight
 lazy val fraudDetectionPipeline = (project in file("./fraud-detection/pipelines"))
   .enablePlugins(PipelinesApplicationPlugin)
   .settings(
-    name := s"fraud-detection-$user",
+    name := s"fraud-detection-trevor",
     version := thisVersion,
     runLocalConfigFile := Some("fraud-detection/pipelines/src/main/resources/local.conf"),
     pipelinesDockerRegistry := Some("gcr.io/gsa-pipeliners")

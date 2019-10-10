@@ -12,8 +12,8 @@ import pipelines.streamlets.avro.{ AvroInlet, AvroOutlet }
 
 class FraudPerMerchantPerMonth extends SparkStreamlet {
 
-  val transactionsGoInHere = AvroInlet[ScoredTransaction]("scored-transactions")
-  val neverendingInsightsComeOutHere = AvroOutlet[FraudReport]("fraud-report")
+  val transactionsGoInHere = AvroInlet[ScoredTransaction]("in")
+  val neverendingInsightsComeOutHere = AvroOutlet[FraudReport]("out")
 
   val shape = StreamletShape(transactionsGoInHere, neverendingInsightsComeOutHere)
 

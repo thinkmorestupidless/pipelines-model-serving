@@ -11,7 +11,7 @@ import pipelines.streamlets.avro.{ AvroInlet, AvroOutlet }
 class SplitOnFraudScore extends AkkaStreamlet with InfluxDbSupport {
   import InfluxDbSupport._
 
-  val everythingComesInHere = AvroInlet[ScoredTransaction]("scored-transactions")
+  val everythingComesInHere = AvroInlet[ScoredTransaction]("in")
   val fraudulentTransactionsGoLeft = AvroOutlet[ScoredTransaction]("fraud")
   val everythingElseGoesRight = AvroOutlet[ScoredTransaction]("not-fraud")
 

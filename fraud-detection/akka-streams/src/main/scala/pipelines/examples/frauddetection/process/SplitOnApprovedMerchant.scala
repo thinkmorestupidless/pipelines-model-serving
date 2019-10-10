@@ -11,10 +11,10 @@ import scala.util.Random
 
 class SplitOnApprovedMerchant extends AkkaStreamlet {
 
-  val everythingComesInHere = AvroInlet[CustomerTransaction]("transactions")
+  val everythingComesInHere = AvroInlet[CustomerTransaction]("in")
 
-  val authorisedTransactionsGoLeft = AvroOutlet[CustomerTransaction]("approved")
-  val everythingElseGoesRight = AvroOutlet[CustomerTransaction]("everything-else")
+  val authorisedTransactionsGoLeft = AvroOutlet[CustomerTransaction]("yes")
+  val everythingElseGoesRight = AvroOutlet[CustomerTransaction]("no")
 
   val shape = StreamletShape.withInlets(everythingComesInHere).withOutlets(authorisedTransactionsGoLeft, everythingElseGoesRight)
 

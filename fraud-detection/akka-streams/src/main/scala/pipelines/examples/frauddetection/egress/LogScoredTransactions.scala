@@ -9,7 +9,7 @@ import pipelines.streamlets.avro.AvroInlet
 
 class LogScoredTransactions extends AkkaStreamlet {
 
-  val in = AvroInlet[ScoredTransaction]("scored-transactions")
+  val in = AvroInlet[ScoredTransaction]("in")
 
   val shape = StreamletShape(in)
 

@@ -10,19 +10,19 @@ import pipelines.streamlets.avro.AvroInlet
 
 class LogFraudReport extends AkkaStreamlet {
 
-  val fraudReportComesInHere = AvroInlet[FraudReport]("fraud-report")
+  val fromTheFraudReport = AvroInlet[FraudReport]("in")
 
-  val shape = StreamletShape(fraudReportComesInHere)
+  val shape = StreamletShape(fromTheFraudReport)
 
   override protected def createLogic(): StreamletLogic = new RunnableGraphStreamletLogic() {
 
-    def flow = FlowWithPipelinesContext[FraudReport]
+    def theLogger = FlowWithPipelinesContext[FraudReport]
       .map { report ⇒
         system.log.info(s"$report")
         report
       }
 
     override def runnableGraph(): RunnableGraph[_] =
-      atLeastOnceSource(fraudReportComesInHere).via(flow).to(Sink.ignore)
+      atLeastOnceSource(fromTheFraudReport).via(theLogger).to(Sink.ignore)
   }
 }

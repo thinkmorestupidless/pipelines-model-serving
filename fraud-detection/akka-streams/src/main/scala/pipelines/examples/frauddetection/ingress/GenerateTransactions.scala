@@ -5,13 +5,13 @@ import java.util.UUID
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import com.lightbend.modelserving.model.util.MainBase
-import pipelines.examples.frauddetection.utils.InfluxDbSupport
 import org.joda.time.{ DateTime, DateTimeZone }
 import pipelines.akkastream.AkkaStreamlet
 import pipelines.akkastream.scaladsl.RunnableGraphStreamletLogic
 import pipelines.examples.frauddetection.data.CustomerTransaction
-import pipelines.streamlets.StreamletShape
+import pipelines.examples.frauddetection.utils.InfluxDbSupport
 import pipelines.streamlets.avro.AvroOutlet
+import pipelines.streamlets.{ IntegerConfigParameter, StreamletShape }
 import pipelinesx.config.ConfigUtil
 import pipelinesx.config.ConfigUtil.implicits._
 import pipelinesx.ingress.RecordsReader
@@ -30,13 +30,20 @@ final case object GenerateTransactions extends AkkaStreamlet with InfluxDbSuppor
 
   final override val shape = StreamletShape(out)
 
-  override def configParameters = Vector(InfluxDBActive, InfluxDBHost, InfluxDBPort)
+  val DataFrequency = IntegerConfigParameter(
+    key = "data-frequency",
+    description = "",
+    defaultValue = Some(100)
+  )
+
+  override def configParameters = Vector(DataFrequency, InfluxDBActive, InfluxDBHost, InfluxDBPort)
 
   override final def createLogic = new RunnableGraphStreamletLogic {
+    val dataFrequency = FiniteDuration(streamletConfig.getInt("data-frequency"), "ms")
     val influxDb = connect(streamletConfig)
 
     def runnableGraph =
-      GenerateTransactionsUtil.makeSource()
+      GenerateTransactionsUtil.makeSource(dataFrequency)
         .map(transaction ⇒ {
           influxDb.writeStart(transaction.transactionId)
           transaction
@@ -54,8 +61,8 @@ object GenerateTransactionsUtil {
       .getOrElse[Int](rootConfigKey + ".data-frequency-milliseconds")(1).millisecond
 
   def makeSource(
-      configRoot: String         = rootConfigKey,
-      frequency:  FiniteDuration = dataFrequencyMilliseconds): Source[CustomerTransaction, NotUsed] = {
+      frequency:  FiniteDuration = dataFrequencyMilliseconds,
+      configRoot: String         = rootConfigKey): Source[CustomerTransaction, NotUsed] = {
     val reader = makeRecordsReader(configRoot)
     Source.repeat(reader)
       .map(reader ⇒ reader.next()._2) // Only keep the record part of the tuple
@@ -71,7 +78,6 @@ object GenerateTransactionsUtil {
 
   val parse: String ⇒ Either[String, CustomerTransaction] = line ⇒ {
     val tokens = line.split(defaultSeparator)
-    logger.info("the record is {" + line + "}")
     if (tokens.length < 11) {
       Left(s"Record does not have 11 fields, ${tokens.mkString(defaultSeparator)}")
     } else try {
@@ -126,5 +132,6 @@ object GenerateTransactionsMain extends MainBase[CustomerTransaction](
 
   override protected def makeSource(frequency: FiniteDuration): Source[CustomerTransaction, NotUsed] =
     GenerateTransactionsUtil.makeSource(
-      GenerateTransactionsUtil.rootConfigKey, frequency)
+      frequency,
+      GenerateTransactionsUtil.rootConfigKey)
 }

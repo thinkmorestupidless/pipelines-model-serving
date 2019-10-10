@@ -25,9 +25,9 @@ import scala.concurrent.duration._
 
 final case object ScoreTransactionsAndServeModels extends AkkaStreamlet {
 
-  val dataComesInHere = AvroInlet[CustomerTransaction]("transactions")
+  val dataComesInHere = AvroInlet[CustomerTransaction]("data")
   val modelsComeInHere = AvroInlet[ModelDescriptor]("models")
-  val scoredTransactionsComeOutHere = AvroOutlet[ScoredTransaction]("scored-transactions")
+  val scoredTransactionsComeOutHere = AvroOutlet[ScoredTransaction]("results")
 
   final override val shape = StreamletShape.withInlets(dataComesInHere, modelsComeInHere).withOutlets(scoredTransactionsComeOutHere)
 
