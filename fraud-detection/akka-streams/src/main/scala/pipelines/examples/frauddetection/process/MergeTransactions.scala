@@ -8,12 +8,17 @@ import pipelines.streamlets.avro.{ AvroInlet, AvroOutlet }
 
 class MergeTransactions extends AkkaStreamlet {
 
+  //\\//\\//\\ INLETS //\\//\\//\\
   val fromTheLeft = AvroInlet[CustomerTransaction]("left")
   val fromTheRight = AvroInlet[CustomerTransaction]("right")
+
+  //\\//\\//\\ OUTLETS //\\//\\//\\
   val everythingGoesOutHere = AvroOutlet[CustomerTransaction]("transactions")
 
-  val shape = StreamletShape.withInlets(fromTheLeft, fromTheRight).withOutlets(everythingGoesOutHere)
+  //\\//\\//\\ SHAPE //\\//\\//\\
+  final override val shape = StreamletShape.withInlets(fromTheLeft, fromTheRight).withOutlets(everythingGoesOutHere)
 
-  override protected def createLogic(): StreamletLogic =
+  //\\//\\//\\ LOGIC //\\//\\//\\
+  final override def createLogic(): StreamletLogic =
     new MergeLogic[CustomerTransaction](Vector(fromTheLeft, fromTheRight), everythingGoesOutHere)
 }

@@ -10,13 +10,18 @@ import pipelines.streamlets.avro.AvroOutlet
 
 import pipelines.examples.frauddetection.utils.CustomerTransactionProtocol._
 
-object ReceiveTransactionsOverHttp extends AkkaServerStreamlet {
+class ReceiveTransactionsOverHttp extends AkkaServerStreamlet {
 
+  //\\//\\//\\ INLETS //\\//\\//\\
+
+  //\\//\\//\\ OUTLETS //\\//\\//\\
   val out = AvroOutlet[CustomerTransaction]("transactions")
 
+  //\\//\\//\\ SHAPE //\\//\\//\\
   final override val shape = StreamletShape.withOutlets(out)
 
-  override final def createLogic =
+  //\\//\\//\\ LOGIC //\\//\\//\\
+  final override def createLogic =
     HttpServerLogic.default(this, out)
 }
 

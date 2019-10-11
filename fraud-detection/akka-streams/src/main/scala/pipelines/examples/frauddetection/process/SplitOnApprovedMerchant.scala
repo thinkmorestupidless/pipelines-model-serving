@@ -11,22 +11,27 @@ import scala.util.Random
 
 class SplitOnApprovedMerchant extends AkkaStreamlet {
 
+  //\\//\\//\\ INLETS //\\//\\//\\
   val everythingComesInHere = AvroInlet[CustomerTransaction]("in")
 
+  //\\//\\//\\ OUTLETS //\\//\\//\\
   val authorisedTransactionsGoLeft = AvroOutlet[CustomerTransaction]("yes")
   val everythingElseGoesRight = AvroOutlet[CustomerTransaction]("no")
 
-  val shape = StreamletShape.withInlets(everythingComesInHere).withOutlets(authorisedTransactionsGoLeft, everythingElseGoesRight)
+  //\\//\\//\\ SHAPE //\\//\\//\\
+  final override val shape = StreamletShape.withInlets(everythingComesInHere).withOutlets(authorisedTransactionsGoLeft, everythingElseGoesRight)
 
-  def isApprovedMerchant(tx: CustomerTransaction) =
-    Random.nextInt(100) > 93
-
-  override protected def createLogic() =
+  //\\//\\//\\ LOGIC //\\//\\//\\
+  final override def createLogic() =
     new SplitterLogic(everythingComesInHere, authorisedTransactionsGoLeft, everythingElseGoesRight) {
+
+      def isApprovedMerchant(tx: CustomerTransaction) =
+        Random.nextInt(100) > 93
+
       override def flow =
         FlowWithPipelinesContext[CustomerTransaction]
           .map { tx ⇒
             if (isApprovedMerchant(tx)) Left(tx) else Right(tx)
           }
-  }
+    }
 }

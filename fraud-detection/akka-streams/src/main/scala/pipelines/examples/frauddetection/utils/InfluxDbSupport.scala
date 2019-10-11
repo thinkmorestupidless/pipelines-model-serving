@@ -8,19 +8,19 @@ import pipelines.streamlets.{ BooleanConfigParameter, StringConfigParameter }
 trait InfluxDbSupport {
 
   val InfluxDBHost = StringConfigParameter(
-    key = "influxDBHost",
+    key = "influxdb-host",
     description = "",
     defaultValue = Some("localhost")
   )
 
   val InfluxDBPort = StringConfigParameter(
-    key = "influxDBPort",
+    key = "influxdb-port",
     description = "",
     defaultValue = Some("8086")
   )
 
   val InfluxDBActive = BooleanConfigParameter(
-    key = "influxDBActive",
+    key = "influxdb-active",
     description = "",
     defaultValue = Some(true)
   )
@@ -29,13 +29,13 @@ trait InfluxDbSupport {
 object InfluxDbSupport {
 
   def connect(streamletConfig: Config): InfluxWriter = {
-    val active = streamletConfig.getBoolean("influxDBActive")
+    val active = streamletConfig.getBoolean("influxdb-active")
 
     if (active) {
-      val influxDBHost = streamletConfig.getString("influxDBHost")
-      val influxDBPort = streamletConfig.getString("influxDBPort")
-      var influxDB = InfluxDBFactory.connect("http://" + influxDBHost + ":" + influxDBPort);
-      influxDB.setDatabase("fraud_ml");
+      val influxDBHost = streamletConfig.getString("influxdb-host")
+      val influxDBPort = streamletConfig.getString("influxdb-port")
+      val influxDB = InfluxDBFactory.connect(s"http://$influxDBHost:$influxDBPort")
+      influxDB.setDatabase("fraud_ml")
 
       new RealInfluxWriter(influxDB)
     } else {
@@ -54,21 +54,29 @@ trait InfluxWriter {
 class RealInfluxWriter(influxDB: InfluxDB) extends InfluxWriter {
 
   override def writeStart(transactionId: String) = {
-    influxDB.write(Point.measurement("transaction-ingress")
-      .tag("transaction-Id", transactionId)
-      .addField("count", 1)
-      .addField("transactionId", transactionId)
-      .build());
+    try {
+      influxDB.write(Point.measurement("transaction-ingress")
+        .tag("transaction-Id", transactionId)
+        .addField("count", 1)
+        .addField("transactionId", transactionId)
+        .build());
+    } catch {
+      case e: Exception ⇒ System.out.println(s"influx writing failed => ${e.getMessage}")
+    }
   }
 
   override def writeEnd(transactionId: String, modelName: String, value: Double) = {
-    influxDB.write(Point.measurement("transaction-ingress")
-      .tag("transaction-Id", transactionId)
-      .tag("ml-model", modelName)
-      .addField("count", 1)
-      .addField("transactionId", transactionId)
-      .addField("result", value)
-      .build());
+    try {
+      influxDB.write(Point.measurement("transaction-ingress")
+        .tag("transaction-Id", transactionId)
+        .tag("ml-model", modelName)
+        .addField("count", 1)
+        .addField("transactionId", transactionId)
+        .addField("result", value)
+        .build());
+    } catch {
+      case e: Exception ⇒ System.out.println(s"influx writing failed => ${e.getMessage}")
+    }
   }
 }
 

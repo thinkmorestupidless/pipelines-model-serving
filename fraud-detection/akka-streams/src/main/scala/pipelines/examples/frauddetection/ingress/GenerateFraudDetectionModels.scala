@@ -4,7 +4,6 @@ import java.util.UUID
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import com.lightbend.modelserving.model.util.ModelMainBase
 import com.lightbend.modelserving.model.{ ModelDescriptor, ModelType }
 import pipelines.akkastream.AkkaStreamlet
 import pipelines.akkastream.scaladsl.RunnableGraphStreamletLogic
@@ -19,19 +18,24 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
 /**
- * One at a time every two minutes, loads a PMML or TensorFlow model and
- * sends it downstream.
+ * Loads a model and sends it downstream
  */
 final case object GenerateFraudDetectionModels extends AkkaStreamlet {
 
+  //\\//\\//\\ INLETS //\\//\\//\\
+
+  //\\//\\//\\ OUTLETS //\\//\\//\\
   val modelsGoOutHere = AvroOutlet[ModelDescriptor]("models", _.modelType.toString)
 
+  //\\//\\//\\ SHAPE //\\//\\//\\
   final override val shape = StreamletShape(modelsGoOutHere)
 
-  override def createLogic = new RunnableGraphStreamletLogic() {
-    def runnableGraph =
-      GenerateFraudDetectionModelsUtil.makeSource().to(atMostOnceSink(modelsGoOutHere))
-  }
+  //\\//\\//\\ LOGIC //\\//\\//\\
+  final override def createLogic =
+    new RunnableGraphStreamletLogic() {
+      def runnableGraph =
+        GenerateFraudDetectionModelsUtil.makeSource().to(atMostOnceSink(modelsGoOutHere))
+    }
 }
 
 object GenerateFraudDetectionModelsUtil {
@@ -62,29 +66,10 @@ object GenerateFraudDetectionModelsUtil {
     Source.repeat(recordsReader)
       .map(reader ⇒ {
         val newModel = reader.next()
-        logger.info("New Model Deployed: " + newModel.modelName)
+        logger.info(s"New Model Deployed: ${newModel.modelName}")
         ModelDescriptor(newModel.modelName + "-" + UUID.randomUUID().toString, newModel.description, newModel.modelType,
           newModel.modelBytes, newModel.modelSourceLocation)
       })
       .throttle(1, frequency)
   }
-}
-
-/**
- * Test program for [[WineModelIngress]] and [[FraudModelIngressUtil]].
- * It reads models and prints their data. For testing purposes only.
- * At this time, Pipelines intercepts calls to sbt run and sbt runMain, so use
- * the console instead:
- * ```
- * import pipelines.examples.modelserving.winequality._
- * WineModelIngressMain.main(Array("-n","5","-f","1000"))
- * ```
- */
-object GenerateFraudDetectionModelsMain extends ModelMainBase(
-  defaultCount = 5,
-  defaultFrequencyMillis = GenerateFraudDetectionModelsUtil.modelFrequencySeconds * 1000) {
-
-  override protected def makeSource(frequency: FiniteDuration): Source[ModelDescriptor, NotUsed] =
-    GenerateFraudDetectionModelsUtil.makeSource(
-      GenerateFraudDetectionModelsUtil.fraudModelsResources, frequency)
 }

@@ -4,7 +4,6 @@ import java.util.UUID
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import com.lightbend.modelserving.model.util.MainBase
 import org.joda.time.{ DateTime, DateTimeZone }
 import pipelines.akkastream.AkkaStreamlet
 import pipelines.akkastream.scaladsl.RunnableGraphStreamletLogic
@@ -20,15 +19,23 @@ import pipelinesx.logging.{ Logger, LoggingUtil }
 import scala.concurrent.duration._
 
 /**
- * Reads wine records from a CSV file (which actually uses ";" as the separator),
- * parses it into a WineRecord and sends it downstream.
+ * Reads transaction records from a CSV file,
+ * parses it into a CustomerTransaction and sends it downstream.
  */
-final case object GenerateTransactions extends AkkaStreamlet with InfluxDbSupport {
+class GenerateTransactions extends AkkaStreamlet
+  with InfluxDbSupport {
   import InfluxDbSupport._
 
+  //\\//\\//\\ INLETS //\\//\\//\\
+
+  //\\//\\//\\ OUTLETS //\\//\\//\\
+  val out = AvroOutlet[CustomerTransaction]("transactions")
+
+  //\\//\\//\\ SHAPE //\\//\\//\\
   final override val shape = StreamletShape(out)
 
-  override final def createLogic = new RunnableGraphStreamletLogic {
+  //\\//\\//\\ LOGIC //\\//\\//\\
+  final override def createLogic = new RunnableGraphStreamletLogic {
     val dataFrequency = FiniteDuration(streamletConfig.getInt("data-frequency"), "ms")
     val influxDb = connect(streamletConfig)
 
@@ -41,12 +48,10 @@ final case object GenerateTransactions extends AkkaStreamlet with InfluxDbSuppor
         .to(atMostOnceSink(out))
   }
 
-  val out = AvroOutlet[CustomerTransaction]("transactions")
-
   val DataFrequency = IntegerConfigParameter(
     key = "data-frequency",
     description = "",
-    defaultValue = Some(100)
+    defaultValue = Some(1000)
   )
 
   override def configParameters = Vector(DataFrequency, InfluxDBActive, InfluxDBHost, InfluxDBPort)
@@ -115,24 +120,4 @@ object GenerateTransactionsUtil {
   }
 
   val logger: Logger = LoggingUtil.getLogger(RecordsReader.getClass)
-}
-
-/**
- * Test program for [[FraudRecordGenerator]] and [[FraudRecordGeneratorUtil]];
- * reads records and prints them. For testing purposes only.
- * At this time, Pipelines intercepts calls to sbt run and sbt runMain, so use
- * the console instead:
- * ```
- * import pipelines.examples.modelserving.winequality._
- * WineRecordIngressMain.main(Array("-n","10","-f","1000"))
- * ```
- */
-object GenerateTransactionsMain extends MainBase[CustomerTransaction](
-  defaultCount = 10,
-  defaultFrequencyMillis = GenerateTransactionsUtil.dataFrequencyMilliseconds) {
-
-  override protected def makeSource(frequency: FiniteDuration): Source[CustomerTransaction, NotUsed] =
-    GenerateTransactionsUtil.makeSource(
-      frequency,
-      GenerateTransactionsUtil.rootConfigKey)
 }
