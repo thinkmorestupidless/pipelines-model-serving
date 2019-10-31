@@ -33,7 +33,7 @@ final case class FraudModelReader(resourceNames: Map[ModelType, Seq[String]]) {
         modelSourceLocation = None)
 
     case ModelType.PMML if finished(ModelType.PMML, currentIndex) ⇒
-      init(ModelType.TENSORFLOW)
+      init(ModelType.H2O)
       next()
 
     case ModelType.PMML ⇒
@@ -44,6 +44,21 @@ final case class FraudModelReader(resourceNames: Map[ModelType, Seq[String]]) {
         modelType = ModelType.PMML,
         modelName = resourceName.dropRight(5),
         description = "generated from Spark",
+        modelBytes = Some(barray),
+        modelSourceLocation = None)
+
+    case ModelType.H2O if finished(ModelType.H2O, currentIndex) ⇒
+      init(ModelType.TENSORFLOW)
+      next()
+
+    case ModelType.H2O ⇒
+      val resourceName = resourceNames(ModelType.H2O)(currentIndex)
+      val barray = readBytes(resourceName)
+      currentIndex += 1
+      new ModelDescriptor(
+        modelType = ModelType.H2O,
+        modelName = resourceName.dropRight(5),
+        description = "H2O Model",
         modelBytes = Some(barray),
         modelSourceLocation = None)
 

@@ -12,6 +12,7 @@ import com.lightbend.modelserving.model.{ Model, ModelDescriptor, ModelType, Mul
 import pipelines.akkastream.AkkaStreamlet
 import pipelines.akkastream.scaladsl.{ FlowWithPipelinesContext, RunnableGraphStreamletLogic }
 import pipelines.examples.frauddetection.data.{ CustomerTransaction, ScoreFromTheModel, ScoredTransaction }
+import pipelines.examples.frauddetection.models.h20.FraudH2OModelFactory
 import pipelines.examples.frauddetection.models.pmml.FraudPMMLModelFactory
 import pipelines.examples.frauddetection.models.tensorflow.{ FraudTensorFlowBundledModelFactory, FraudTensorFlowModelFactory }
 import pipelines.streamlets.StreamletShape
@@ -35,7 +36,8 @@ final case object ScoreTransactionsAndServeModels extends AkkaStreamlet {
     Map(
       ModelType.PMML -> FraudPMMLModelFactory,
       ModelType.TENSORFLOW -> FraudTensorFlowModelFactory,
-      ModelType.TENSORFLOWSAVED -> FraudTensorFlowBundledModelFactory))
+      ModelType.TENSORFLOWSAVED -> FraudTensorFlowBundledModelFactory,
+      ModelType.H2O -> FraudH2OModelFactory))
 
   //\\//\\//\\ LOGIC //\\//\\//\\
   final override def createLogic = new RunnableGraphStreamletLogic() {

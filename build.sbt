@@ -7,70 +7,10 @@ lazy val thisVersion = "1.3.0"
 version in ThisBuild := thisVersion
 fork := true
 
-// The following assumes an environment variable that defines the OpenShift cluster
-// domain name and uses the default registry prefix. Adapt for your environment or
-// simply use this (The "Some" is required):
-// lazy val dockerRegistry = Some("registry-on-my.server.name")
-//lazy val dockerRegistry =
-//  sys.env.get("OPENSHIFT_CLUSTER_DOMAIN").map(
-//    server => s"docker-registry-default.$server")
-
-val user = sys.props.getOrElse("user.name", "unknown-user")
-
-// Each app project must include the avroSpecificSourceDirectories setting shown
-// below. See the README for details.
-lazy val wineModelServingPipeline = (project in file("./wine-quality-ml"))
-  .enablePlugins(PipelinesApplicationPlugin)
-  .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
-  .settings(
-    name := s"wine-quality-ml-$user",
-    version := thisVersion,
-    pipelinesDockerRegistry := Some("docker-registry-default.gsa2.lightbend.com"),
-    libraryDependencies ++= Seq(influx, scalaTest),
-    avroSpecificSourceDirectories in Compile ++=
-      Seq(new java.io.File("model-serving/src/main/avro"))
-  )
-  .settings(commonSettings)
-  .dependsOn(pipelinesx, modelServing)
-
-// Each app project must include the avroSpecificSourceDirectories setting shown
-// below. See the README for details.
-lazy val recommenderModelServingPipeline = (project in file("./recommender-ml"))
-  .enablePlugins(PipelinesApplicationPlugin)
-  .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
-  .settings(
-    name := s"recommender-ml-$user",
-    version := thisVersion,
-    pipelinesDockerRegistry := Some("docker-registry-default.fiorano.lightbend.com"),
-    libraryDependencies ++= Seq(scalaTest),
-    avroSpecificSourceDirectories in Compile ++=
-      Seq(new java.io.File("model-serving/src/main/avro"))
-  )
-  .settings(commonSettings)
-  .dependsOn(pipelinesx, modelServing)
-
-// Each app project must include the avroSpecificSourceDirectories setting shown
-// below. See the README for details.
-lazy val airlineFlightsModelServingPipeline = (project in file("./airline-flights-ml"))
-  .enablePlugins(PipelinesApplicationPlugin)
-  .enablePlugins(PipelinesAkkaStreamsLibraryPlugin)
-  .settings(
-    name := s"airline-flights-ml-$user",
-    version := thisVersion,
-    pipelinesDockerRegistry := Some("docker-registry-default.fiorano.lightbend.com"),
-    libraryDependencies ++= Seq(influx, scalaTest),
-    avroSpecificSourceDirectories in Compile ++=
-      Seq(new java.io.File("model-serving/src/main/avro"))
-  )
-  .settings(commonSettings)
-  .dependsOn(pipelinesx, modelServing)
-
-// Each app project must include the avroSpecificSourceDirectories setting shown
-// below. See the README for details.
 lazy val fraudDetectionPipeline = (project in file("./fraud-detection/pipelines"))
   .enablePlugins(PipelinesApplicationPlugin)
   .settings(
-    name := s"fraud-detection-trevor",
+    name := s"fraud-detection",
     version := thisVersion,
     runLocalConfigFile := Some("fraud-detection/pipelines/src/main/resources/local.conf"),
     pipelinesDockerRegistry := Some("gcr.io/gsa-pipeliners")
@@ -102,37 +42,6 @@ lazy val fraudDetectionSpark = (project in file("./fraud-detection/spark"))
     libraryDependencies ++= Seq(scalaTest)
   )
   .dependsOn(fraudDetectionSchema)
-
-lazy val fraudDetectionCustomerServiceApi = (project in file("./fraud-detection/lagom/fraud-api"))
-  .settings(
-    libraryDependencies ++= Seq(
-      lagomScaladslApi
-    )
-  )
-
-lazy val fraudDetectionCustomerServiceImpl = (project in file("./fraud-detection/lagom/fraud-impl"))
-  .enablePlugins(LagomScala)
-  .settings(
-    libraryDependencies ++= Seq(
-      lagomScaladslPersistenceCassandra,
-      lagomScaladslKafkaBroker,
-      lagomScaladslTestKit,
-      "com.softwaremill.macwire" %% "macros" % "2.3.0" % "provided",
-      "org.scalatest" %% "scalatest" % "3.0.4" % Test
-    )
-  )
-  .settings(lagomForkedTestSettings)
-  .dependsOn(fraudDetectionCustomerServiceApi)
-
-lazy val fraudDetectionCustomerGenerator = (project in file("./fraud-detection/customer-generator"))
-  .settings(
-    mainClass := Some("com.lightbend.fraud.gen.Main"),
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-stream" % "2.5.25",
-      "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "0.18",
-      "org.slf4j" % "slf4j-simple" % "1.7.28"
-    )
-  )
 
 lazy val pipelinesx = (project in file("./pipelinesx"))
   .enablePlugins(PipelinesLibraryPlugin)
